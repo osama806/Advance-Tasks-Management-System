@@ -3,12 +3,16 @@
 namespace App\Services;
 
 use App\Http\Resources\TaskResource;
+use App\Http\Services\assetsService;
+use App\Models\Role;
 use App\Models\Task;
+use App\Models\TaskStatusUpdate;
 use App\Models\User;
 use App\Traits\ResponseTrait;
 use Carbon\Carbon;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class TaskService
@@ -29,7 +33,9 @@ class TaskService
 
         // If no filters are provided, return all tasks
         if (empty($filteredData)) {
-            $tasks = Task::all();
+            $tasks = Cache::remember('tasks', 3600, function () {
+                return Task::all();
+            });
         } else {
             $tasksQuery = Task::query();
 
@@ -53,7 +59,7 @@ class TaskService
             'title'       => $data['title'],
             'description' => $data['description'],
             'priority'    => $data['priority'],
-            'created_by'  => Auth::user()->role->name
+            'type'        => $data['type']
         ]);
 
         return $task
@@ -69,14 +75,6 @@ class TaskService
      */
     public function update(array $data, Task $task)
     {
-        // manager can control in tasks that he created only
-        if (Auth::user()->role == 'manager' && $task->created_by !== 'manager') {
-            return [
-                'status'        =>      false,
-                'msg'           =>      'This task not create from you!',
-                'code'          =>      400
-            ];
-        }
         // return attributes value that not null and not empty
         $filteredData = array_filter($data, function ($value) {
             return !is_null($value) && trim($value) !== '';
@@ -98,8 +96,9 @@ class TaskService
      */
     public function delete(Task $task)
     {
-        if (!Auth::check() || Auth::user()->role !== "admin") {
-            return ['status'    =>  false,  'msg' => "Can't access delete permission", 'code' => 400];
+        $role = Role::where('user_id', Auth::id())->first();
+        if ($role  && $role->name !== 'admin') {
+            return $this->getResponse('error', "Can't access to this permission", 400);
         }
         $task->delete();
         return ['status'    =>  true];
@@ -112,7 +111,8 @@ class TaskService
      */
     public function restore(Task $task)
     {
-        if (Auth::user()->role !== "admin") {
+        $role = Role::where('user_id', Auth::id())->first();
+        if ($role && $role->name !== 'admin') {
             return [
                 'status'        =>      false,
                 'msg'           =>      "Can't access delete permission",
@@ -144,17 +144,19 @@ class TaskService
     public function assign(array $data, Task $task)
     {
         // check if task assigned to user already previous
-        if ($task->assign_to !== null) {
+        if ($task->assigned_to !== null) {
             return ['status' => false, 'msg' => 'This task is already assigned to a user', 'code' => 400];
         }
 
-        $user = User::find($data['assign_to']);
+        $user = User::find($data['assigned_to']);
         if (!$user) {
             return ['status' => false, 'msg' => 'User not found!', 'code' => 404];
         }
 
         // assign task to normal user (not allow assign to user as admin or manager role)
-        if ($user->role !== null) {
+        $role = Role::where('user_id', $data['assigned_to'])->first();
+        if ($role && $role->name !== 'user') {
+            Log::info($role->name);
             return ['status' => false, 'msg' => "Can't assign task to this user", 'code' => 400];
         }
 
@@ -170,37 +172,72 @@ class TaskService
             return ['status' => false, 'msg' => 'Invalid due date format, please use d-m-Y H:i', 'code' => 400];
         }
 
-        $task->assign_to = $data['assign_to'];
+        $task->assigned_to = $data['assigned_to'];
 
         // date without timezone
         $task->due_date = $dueDate->toDateTime()->format('d-m-Y H:i');
-        $task->status = 'in-progress';
+        $task->status = 'Open';
         $task->save();
+
+        TaskStatusUpdate::create([
+            'task_id'           =>          $task->id,
+            'status'            =>          $task->status
+        ]);
 
         return ['status' => true];
     }
 
     /**
-     * Deliveried a specified task to admin in specific time
+     * Create new comment to task
+     * @param array $data
      * @param \App\Models\Task $task
      * @return array
      */
-    public function delivery(Task $task)
+    public function addComment(array $data, Task $task)
     {
-        if (Auth::user()->role !== null || $task->status !== 'in-progress') {
-            Log::info($task->status);
-            Log::info(Auth::user()->role);
-            return ['status'    =>  false,  'msg' => 'User unAuthorization or task status not in-progress', 'code'  =>   400];
-        }
+        try {
+            $task->comments()->create([
+                'content'       =>      $data['content']
+            ]);
 
-        // check if task assigned to auth user
-        if ($task->assign_to !== Auth::id()) {
-            return ['status'    =>  false,  'msg' => 'This task assigned to another user', 'code'  =>   400];
+            return [
+                'status'        =>      true
+            ];
+        } catch (\Throwable $th) {
+            return [
+                'status'        =>      false,
+                'msg'           =>      $th->getMessage(),
+                'code'          =>      500
+            ];
         }
+    }
 
-        $task->status = 'done';
-        $task->due_date = now()->toDateTime()->format('d-m-Y H:i');
-        $task->save();
-        return ['status'    =>  true];
+    /**
+     * Create new attachment to task
+     * @param array $data
+     * @param \App\Models\Task $task
+     * @return array
+     */
+    public function addAttach(array $data, Task $task)
+    {
+        // Store the file using the assets service
+        $assetsService = new assetsService();
+        $fileURL = $assetsService->storeImage($data['file']);
+
+        try {
+            $task->attachments()->create([
+                'file_path'       =>        $fileURL
+            ]);
+
+            return [
+                'status'        =>      true
+            ];
+        } catch (\Throwable $th) {
+            return [
+                'status'        =>      false,
+                'msg'           =>      $th->getMessage(),
+                'code'          =>      500
+            ];
+        }
     }
 }

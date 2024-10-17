@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Http\Requests\Task;
+namespace App\Http\Requests\ChangeTaskStatus;
 
 use App\Models\Role;
 use App\Traits\ResponseTrait;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Auth;
 
-class StoreTaskRequest extends FormRequest
+class ChangeTaskStatusRequest extends FormRequest
 {
     use ResponseTrait;
     /**
@@ -17,7 +18,7 @@ class StoreTaskRequest extends FormRequest
     public function authorize(): bool
     {
         $role = Role::where('user_id', Auth::id())->first();
-        return Auth::check() && $role && $role->name === 'admin';
+        return Auth::check() && $role && $role->name === 'user';
     }
 
     /**
@@ -38,10 +39,7 @@ class StoreTaskRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title'             =>      'required|string|min:2|max:100|unique:tasks,title',
-            'description'       =>      'required|string|max:256',
-            'priority'          =>      'required|string|in:Low,Medium,High',
-            'type'              =>      'required|string|in:Bug,Feature,Improvement',
+            'status'            =>      'required|string|in:In Progress,Completed'
         ];
     }
 
@@ -51,7 +49,7 @@ class StoreTaskRequest extends FormRequest
      * @throws \Illuminate\Http\Exceptions\HttpResponseException
      * @return never
      */
-    public function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
+    public function failedValidation(Validator $validator)
     {
         throw new HttpResponseException($this->getResponse('errors', $validator->errors(), 422));
     }
@@ -63,10 +61,7 @@ class StoreTaskRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'title'        => 'Task title',
-            'description'  => 'Task description',
-            'priority'     => 'Task priority',
-            'type'         => 'Task type'
+            'status'         =>     'Task status'
         ];
     }
 
@@ -78,9 +73,7 @@ class StoreTaskRequest extends FormRequest
     {
         return [
             'required'       => 'The :attribute field is required.',
-            'unique'         => 'This :attribute is already taken',
-            'min'            => 'The :attribute field must be at least :min.',
-            'max'            => 'The :attribute field must not be greater than :max.',
+            'in'             => 'The :attribute field must be only (In Progress | Completed).',
         ];
     }
 }

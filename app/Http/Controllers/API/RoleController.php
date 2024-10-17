@@ -1,13 +1,15 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Controller;
 use App\Http\Resources\RoleResource;
 use App\Models\Role;
 use App\Traits\ResponseTrait;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class RoleController extends Controller
 {
@@ -19,10 +21,14 @@ class RoleController extends Controller
      */
     public function index()
     {
-        if (Auth::user()->role->name !== 'admin') {
+        $role = Role::where('user_id', Auth::id())->first();
+        if ($role &&$role->name !== 'admin') {
             return $this->getResponse('error', "Can't access to this permission", 400);
         }
-        $roles = Role::with('users')->get();
+        $roles = Cache::remember('roles', 3600, function () {
+            return Role::with('users')->get();
+        });
+
         return $this->getResponse('roles', RoleResource::collection($roles), 200);
     }
 
@@ -33,7 +39,8 @@ class RoleController extends Controller
      */
     public function show(Role $role)
     {
-        if (Auth::user()->role->name !== 'admin') {
+        $role = Role::where('user_id', Auth::id())->first();
+        if ($role && $role->name !== 'admin') {
             return $this->getResponse('error', "Can't access to this permission", 400);
         }
         try {
@@ -50,7 +57,8 @@ class RoleController extends Controller
      */
     public function destroy(Role $role)
     {
-        if (Auth::user()->role->name !== 'admin') {
+        $role = Role::where('user_id', Auth::id())->first();
+        if ($role  && $role->name !== 'admin') {
             return $this->getResponse('error', "Can't access to this permission", 400);
         }
         $role->delete();

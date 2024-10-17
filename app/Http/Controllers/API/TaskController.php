@@ -3,15 +3,19 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Task\AddAttachmentRequest;
+use App\Http\Requests\Task\AddCommentRequest;
 use App\Http\Requests\Task\AssignTaskRequest;
 use App\Http\Requests\Task\FilterTaskRequest;
 use App\Http\Requests\Task\StoreTaskRequest;
 use App\Http\Requests\Task\UpdateTaskRequest;
 use App\Http\Resources\TaskResource;
+use App\Models\Role;
 use App\Models\Task;
 use App\Services\TaskService;
 use App\Traits\ResponseTrait;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class TaskController extends Controller
 {
@@ -42,7 +46,7 @@ class TaskController extends Controller
      */
     public function myTasks()
     {
-        $tasks = Task::where('assign_to', Auth::id())->get();
+        $tasks = Task::where('assigned_to', Auth::id())->get();
         return $this->getResponse('tasks', TaskResource::collection($tasks), 200);
     }
 
@@ -112,8 +116,10 @@ class TaskController extends Controller
      */
     public function showDeletedTasks()
     {
-        if (Auth::user()->role === null) {
-            return $this->getResponse('error', "You can't access to this permission", 400);
+        $role = Role::where('user_id', Auth::id())->first();
+        if ($role && $role->name !== 'admin') {
+            Log::info($role->name);
+            return $this->getResponse('error', "Can't access to this permission", 400);
         }
         $tasks = Task::onlyTrashed()->get();
         return $this->getResponse('deleted-tasks', TaskResource::collection($tasks), 200);
@@ -143,8 +149,9 @@ class TaskController extends Controller
      */
     public function forceDeleteTask($id)
     {
-        if (Auth::user()->role === null) {
-            return $this->getResponse('error', "You can't access to this permission", 400);
+        $role = Role::where('user_id', Auth::id())->first();
+        if ($role && $role->name !== 'admin') {
+            return $this->getResponse('error', "Can't access to this permission", 400);
         }
         $task = Task::find($id);
         if (!$task) {
@@ -177,19 +184,40 @@ class TaskController extends Controller
     }
 
     /**
-     * Deliveried task to admin
+     * Create new comment to task by admin or manager
+     * @param \App\Http\Requests\Task\AddCommentRequest $addCommentRequest
      * @param mixed $id
      * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
      */
-    public function taskDelivery($id)
+    public function addCommentToTask(AddCommentRequest $addCommentRequest, $id)
     {
         $task = Task::find($id);
         if (!$task) {
             return $this->getResponse('error', 'Not Found This Task', 404);
         }
-        $response = $this->taskService->delivery($task);
+        $validatedData = $addCommentRequest->validated();
+        $response = $this->taskService->addComment($validatedData, $task);
         return $response['status']
-            ? $this->getResponse('msg', 'Task Deliveried Successfully', 200)
-            : $this->getResponse('error', $response['msg'], $response['code']);
+            ? $this->getResponse("msg", "Create Comment Successfully", 200)
+            : $this->getResponse("error", $response['msg'], $response['code']);
+    }
+
+    /**
+     * Create new Attachment to task
+     * @param \App\Http\Requests\Task\AddAttachmentRequest $addAttachmentRequest
+     * @param mixed $id
+     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
+     */
+    public function addAttachmentToTask(AddAttachmentRequest $addAttachmentRequest, $id)
+    {
+        $task = Task::find($id);
+        if (!$task) {
+            return $this->getResponse('error', 'Not Found This Task', 404);
+        }
+        $validatedData = $addAttachmentRequest->validated();
+        $response = $this->taskService->addAttach($validatedData, $task);
+        return $response['status']
+            ? $this->getResponse("msg", "Create Attachment Successfully", 200)
+            : $this->getResponse("error", $response['msg'], $response['code']);
     }
 }

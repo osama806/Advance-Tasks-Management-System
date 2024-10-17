@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Http\Resources\UserResource;
+use App\Http\Services\assetsService;
 use App\Models\Role;
 use App\Models\User;
 use App\Traits\ResponseTrait;
@@ -88,7 +89,7 @@ class AuthService
             if (isset($data['password'])) {
                 $user->password = bcrypt($data['password']);
             }
-            $user->save();
+            $user->update();
             return ['status'    =>  true];
         } catch (Exception $e) {
             Log::error('Error update profile: ' . $e->getMessage());
@@ -153,6 +154,60 @@ class AuthService
                 'status' => false,
                 'msg' => $e->getMessage(),
                 'code' => 500,
+            ];
+        }
+    }
+
+    /**
+     * Create new comment to user
+     * @param array $data
+     * @param \App\Models\User $user
+     * @return array
+     */
+    public function addComment(array $data, User $user)
+    {
+        try {
+            $user->comments()->create([
+                'content'       =>      $data['content']
+            ]);
+
+            return [
+                'status'        =>      true
+            ];
+        } catch (\Throwable $th) {
+            return [
+                'status'        =>      false,
+                'msg'           =>      $th->getMessage(),
+                'code'          =>      500
+            ];
+        }
+    }
+
+    /**
+     * Create new attachment to user
+     * @param array $data
+     * @param \App\Models\User $user
+     * @return array
+     */
+    public function addAttach(array $data, User $user)
+    {
+        // Store the file using the assets service
+        $assetsService = new AssetsService();
+        $fileURL = $assetsService->storeImage($data['file_path']);
+
+        try {
+            $user->attachments()->create([
+                'file_path'       =>        $fileURL
+            ]);
+
+            return [
+                'status'        =>      true
+            ];
+        } catch (\Throwable $th) {
+            return [
+                'status'        =>      false,
+                'msg'           =>      $th->getMessage(),
+                'code'          =>      500
             ];
         }
     }

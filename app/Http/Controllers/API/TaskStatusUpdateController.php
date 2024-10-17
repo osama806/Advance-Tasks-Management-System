@@ -1,49 +1,58 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\API;
 
-use App\Models\TaskStatusUpdate;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\ChangeTaskStatus\ChangeTaskStatusRequest;
+use App\Models\Task;
+use App\Services\TaskStatusUpdateService;
+use App\Traits\ResponseTrait;
 
 class TaskStatusUpdateController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    use ResponseTrait;
+    protected $taskStatusUpdateService;
+
+    public function __construct(TaskStatusUpdateService $taskStatusUpdateService)
     {
-        //
+        $this->taskStatusUpdateService = $taskStatusUpdateService;
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Change task status to In Progress
+     * @param \App\Http\Requests\ChangeTaskStatus\ChangeTaskStatusRequest $changeTaskStatusRequest
+     * @param mixed $id
+     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function taskProcessing(ChangeTaskStatusRequest $changeTaskStatusRequest, $id)
     {
-        //
+        $task = Task::findOrFail($id);
+        if (!$task) {
+            return $this->getResponse('error', 'Task Not Found', 404);
+        }
+        $validedData = $changeTaskStatusRequest->validated();
+        $response = $this->taskStatusUpdateService->processing($validedData, $task);
+        return $response['status']
+            ? $this->getResponse('msg', 'Task Status is Processing', 200)
+            : $this->getResponse('error', $response['msg'], $response['code']);
     }
 
     /**
-     * Display the specified resource.
+     * Deliveried task to admin
+     * @param \App\Http\Requests\ChangeTaskStatus\ChangeTaskStatusRequest $changeTaskStatusRequest
+     * @param mixed $id
+     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
      */
-    public function show(TaskStatusUpdate $taskStatusUpdate)
+    public function taskDelivery(ChangeTaskStatusRequest $changeTaskStatusRequest, $id)
     {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, TaskStatusUpdate $taskStatusUpdate)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(TaskStatusUpdate $taskStatusUpdate)
-    {
-        //
+        $task = Task::find($id);
+        if (!$task) {
+            return $this->getResponse('error', 'Not Found This Task', 404);
+        }
+        $validatedData = $changeTaskStatusRequest->validated();
+        $response = $this->taskStatusUpdateService->delivery($validatedData, $task);
+        return $response['status']
+            ? $this->getResponse('msg', 'Task Status is Completed', 200)
+            : $this->getResponse('error', $response['msg'], $response['code']);
     }
 }

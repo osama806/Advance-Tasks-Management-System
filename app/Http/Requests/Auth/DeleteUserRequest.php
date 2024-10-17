@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\Role;
 use App\Traits\ResponseTrait;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -16,7 +17,8 @@ class DeleteUserRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return Auth::check() && Auth::user()->role->name === 'admin';
+        $role = Role::where('user_id', Auth::id())->first();
+        return Auth::check() && $role && $role->name === 'admin';
     }
 
     /**

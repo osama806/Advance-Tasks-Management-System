@@ -25,8 +25,8 @@ class FilterTaskRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "priority"      =>      'nullable|numeric|min:1|max:10',
-            "status"        =>      'nullable|string|in:pending,in-progress,done'
+            'priority'      =>      'nullable|string|in:Low,Medium,High',
+            "status"        =>      'nullable|string|in:Open,In Progress,Completed,Blocked'
         ];
     }
 
@@ -60,11 +60,8 @@ class FilterTaskRequest extends FormRequest
     public function messages()
     {
         return [
-            "numeric" => 'The :attribute must be a number.',
             "string"  => 'The :attribute must be a string.',
             "in"      => 'The selected :attribute is invalid.',
-            "min"     => 'The :attribute field must be at least :min.',
-            'max'     => 'The :attribute must not exceed :max characters.',
         ];
     }
 }

@@ -16,11 +16,13 @@ return new class extends Migration
             $table->string('title');
             $table->text('description');
             $table->enum('type', ['Bug', 'Feature', 'Improvement']);
-            $table->enum('status', ['Open', 'In Progress', 'Completed', 'Blocked']);
+            $table->enum('status', ['Open', 'In Progress', 'Completed', 'Blocked'])->nullable();
             $table->enum('priority', ['Low', 'Medium', 'High']);
             $table->date('due_date')->nullable();
-            $table->foreignId('assigned_to')->constrained('users')->onDelete('cascade');
+            $table->unsignedBigInteger('assigned_to')->nullable();
+            $table->foreign('assigned_to')->references('id')->on('users')->cascadeOnDelete();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

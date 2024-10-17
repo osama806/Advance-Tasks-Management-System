@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Task;
 
+use App\Models\Role;
 use App\Traits\ResponseTrait;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -15,7 +16,8 @@ class UpdateTaskRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return Auth::check() && Auth::user()->role !== null;
+        $role = Role::where('user_id', Auth::id())->first();
+        return Auth::check() && $role && $role->name === 'admin';
     }
 
     /**
@@ -36,10 +38,11 @@ class UpdateTaskRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title'             =>      'nullable|string|min:2|max:100|unique:user_tasks,title',
+            'title'             =>      'nullable|string|min:2|max:100|unique:tasks,title',
             'description'       =>      'nullable|string|max:256',
-            'priority'          =>      'nullable|numeric|min:1|max:10',
-            'assign_to'         =>      'nullable|numeric|min:1|exists:users,id',
+            'priority'          =>      'nullable|string|in:Low,Medium,High',
+            'type'              =>      'nullable|string|in:Bug,Feature,Improvement',
+            'assigned_to'       =>      'nullable|numeric|min:1|exists:users,id',
             'due_date'          =>      'nullable|date|date_format:d-m-Y H:i'
         ];
     }
@@ -65,8 +68,9 @@ class UpdateTaskRequest extends FormRequest
             'title'        => 'Task title',
             'description'  => 'Task description',
             'priority'     => 'Task priority',
-            'assign_to'    => 'Assignee',
+            'assigned_to'  => 'Assignee',
             'due_date'     => 'Due date',
+            'type'         => 'Task type'
         ];
     }
 
@@ -79,13 +83,11 @@ class UpdateTaskRequest extends FormRequest
         return [
             'required'       => 'The :attribute field is required.',
             'unique'         => 'The :attribute has already been taken',
-            'numeric'        => 'The :attribute must be a number.',
             'min'            => 'The :attribute field must be at least 1.',
             'max'            => 'The :attribute field must not be greater than 10.',
             'date'           => 'Please provide a valid date for the :attribute.',
             'exists'         => 'The selected user does not exist',
             'date_format'    => 'The :attribute must be in the format of "dd-mm-yyyy hh:mm" (e.g., 25-12-2024 14:00)',
-
         ];
     }
 }

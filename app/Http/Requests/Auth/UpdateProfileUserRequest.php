@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\Role;
 use App\Traits\ResponseTrait;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
@@ -17,8 +18,8 @@ class UpdateProfileUserRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return Auth::check() && Auth::user()->role->name === "admin";
-    }
+        $role = Role::where('user_id', Auth::id())->first();
+        return Auth::check() && $role && $role->name === 'admin';    }
 
     /**
      * Get errors that show from authorize

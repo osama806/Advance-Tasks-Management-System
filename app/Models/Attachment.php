@@ -13,7 +13,6 @@ class Attachment extends Model
 
     protected $fillable = [
         'file_path',
-        'user_id',
     ];
 
     public function attachable(): MorphTo

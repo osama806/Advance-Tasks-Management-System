@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Task;
 
+use App\Models\Role;
 use App\Traits\ResponseTrait;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -16,7 +17,8 @@ class AssignTaskRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return Auth::check() && Auth::user()->role !== null;
+        $role = Role::where('user_id', Auth::id())->first();
+        return Auth::check() && $role && $role->name === 'admin';
     }
 
     /**
@@ -37,8 +39,8 @@ class AssignTaskRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'assign_to' => 'required|numeric|min:1|exists:users,id',
-            'due_date'  => 'required|date|date_format:d-m-Y H:i'
+            'assigned_to' => 'required|numeric|min:1|exists:users,id',
+            'due_date'    => 'required|date|date_format:d-m-Y H:i'
         ];
     }
 
@@ -60,7 +62,7 @@ class AssignTaskRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'assign_to' => 'Assignee',
+            'assigned_to' => 'Assignee',
             'due_date'  => 'Due date',
         ];
     }

@@ -8,7 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Auth;
 
-class StoreTaskRequest extends FormRequest
+class AddCommentRequest extends FormRequest
 {
     use ResponseTrait;
     /**
@@ -17,8 +17,7 @@ class StoreTaskRequest extends FormRequest
     public function authorize(): bool
     {
         $role = Role::where('user_id', Auth::id())->first();
-        return Auth::check() && $role && $role->name === 'admin';
-    }
+        return Auth::check() && $role && $role->name === 'admin';    }
 
     /**
      * Get errors that show from authorize
@@ -38,10 +37,7 @@ class StoreTaskRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title'             =>      'required|string|min:2|max:100|unique:tasks,title',
-            'description'       =>      'required|string|max:256',
-            'priority'          =>      'required|string|in:Low,Medium,High',
-            'type'              =>      'required|string|in:Bug,Feature,Improvement',
+            'content'       =>      'required|string|min:10'
         ];
     }
 
@@ -60,13 +56,10 @@ class StoreTaskRequest extends FormRequest
      * Get custom attributes for validator errors.
      * @return array
      */
-    public function attributes(): array
+    public function attributes()
     {
         return [
-            'title'        => 'Task title',
-            'description'  => 'Task description',
-            'priority'     => 'Task priority',
-            'type'         => 'Task type'
+            'content'       =>      'Comment description'
         ];
     }
 
@@ -74,13 +67,10 @@ class StoreTaskRequest extends FormRequest
      * Get custom messages for validator errors.
      * @return array
      */
-    public function messages(): array
+    public function messages()
     {
         return [
-            'required'       => 'The :attribute field is required.',
-            'unique'         => 'This :attribute is already taken',
             'min'            => 'The :attribute field must be at least :min.',
-            'max'            => 'The :attribute field must not be greater than :max.',
         ];
     }
 }

@@ -122,5 +122,5 @@ composer install
 
 -   Link:
     ```
-    https://documenter.getpostman.com/view/32954091/2sAXjRX9tL
+    https://documenter.getpostman.com/view/32954091/2sAXxWZp2s
     ```

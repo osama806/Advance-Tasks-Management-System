@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Http\Resources\TaskResource;
-use App\Http\Services\assetsService;
+use App\Services\assetsService;
 use App\Models\Role;
 use App\Models\Task;
 use App\Models\TaskStatusUpdate;
@@ -145,6 +145,7 @@ class TaskService
     {
         // check if task assigned to user already previous
         if ($task->assigned_to !== null) {
+            Log::info($task->assigned_to);
             return ['status' => false, 'msg' => 'This task is already assigned to a user', 'code' => 400];
         }
 
@@ -222,6 +223,7 @@ class TaskService
     {
         // Store the file using the assets service
         $assetsService = new assetsService();
+        Log::info($data['file']);
         $fileURL = $assetsService->storeImage($data['file']);
 
         try {

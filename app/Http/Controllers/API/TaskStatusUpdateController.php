@@ -19,40 +19,21 @@ class TaskStatusUpdateController extends Controller
     }
 
     /**
-     * Change task status to In Progress
+     * Change status task
      * @param \App\Http\Requests\ChangeTaskStatus\ChangeTaskStatusRequest $changeTaskStatusRequest
      * @param mixed $id
      * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
      */
-    public function taskProcessing(ChangeTaskStatusRequest $changeTaskStatusRequest, $id)
+    public function changeStatus(ChangeTaskStatusRequest $changeTaskStatusRequest, $id)
     {
         $task = Task::findOrFail($id);
         if (!$task) {
             return $this->getResponse('error', 'Task Not Found', 404);
         }
         $validedData = $changeTaskStatusRequest->validated();
-        $response = $this->taskStatusUpdateService->processing($validedData, $task);
+        $response = $this->taskStatusUpdateService->changeStatus($validedData, $task);
         return $response['status']
-            ? $this->getResponse('msg', 'Task Status is Processing', 200)
-            : $this->getResponse('error', $response['msg'], $response['code']);
-    }
-
-    /**
-     * Deliveried task to admin
-     * @param \App\Http\Requests\ChangeTaskStatus\ChangeTaskStatusRequest $changeTaskStatusRequest
-     * @param mixed $id
-     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
-     */
-    public function taskDelivery(ChangeTaskStatusRequest $changeTaskStatusRequest, $id)
-    {
-        $task = Task::find($id);
-        if (!$task) {
-            return $this->getResponse('error', 'Not Found This Task', 404);
-        }
-        $validatedData = $changeTaskStatusRequest->validated();
-        $response = $this->taskStatusUpdateService->delivery($validatedData, $task);
-        return $response['status']
-            ? $this->getResponse('msg', 'Task Status is Completed', 200)
+            ? $this->getResponse('msg', $response['msg'], 200)
             : $this->getResponse('error', $response['msg'], $response['code']);
     }
 }

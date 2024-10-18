@@ -19,8 +19,8 @@ Route::prefix('v1')->group(function () {
             Route::get('users/deleted-users', 'showDeletedUsers');
             Route::post('user/restore', 'restoreUser');
             Route::post('user/permanently-delete', 'forceDeleteUser');
-            // Route::post('users/{id}/comment', 'addCommentToUser');
-            // Route::post('users/{id}/attach', 'addAttachmentToUser');
+            Route::post('users/{id}/comments', 'addCommentToUser');
+            Route::post('users/{id}/attachments', 'addAttachmentToUser');
         });
         Route::post('users', 'register');
         Route::post('login', 'login');
@@ -35,19 +35,15 @@ Route::prefix('v1')->group(function () {
             Route::get('user/my-tasks', 'myTasks');
             Route::get('tasks/deleted-tasks', 'showDeletedTasks');
             Route::post('task/{id}/permanently-delete', 'forceDeleteTask');
-            // Route::post('tasks/{id}/comment', 'addCommentToTask');
-            // Route::post('tasks/{id}/attach', 'addAttachmentToTask');
+            Route::post('tasks/{id}/comments', 'addCommentToTask');
+            Route::post('tasks/{id}/attachments', 'addAttachmentToTask');
         });
-        // Route::apiResource('comments', CommentController::class)->except(['store', 'update']);
-        // Route::apiResource('attachments', AttachmentController::class)->except(['store', 'update']);
-        Route::controller(TaskStatusUpdateController::class)->group(function () {
-            Route::post('tasks/{id}/progress', 'taskProcessing');
-            Route::post('tasks/{id}/completed', 'taskDelivery');
-        });
-        // Route::apiResource('roles', RoleController::class)->only(['destroy']);
+        Route::apiResource('comments', CommentController::class)->only(['index', 'show', 'destroy']);
+        Route::apiResource('attachments', AttachmentController::class)->except(['store', 'update']);
+        Route::post('tasks/{id}/status', [TaskStatusUpdateController::class, 'changeStatus']);
+        Route::apiResource('roles', RoleController::class)->only(['index', 'show', 'destroy']);
+        Route::apiResource('tasks', TaskController::class)->only(['index', 'show']);
     });
-    // Route::apiResource('roles', RoleController::class)->only(['index', 'show']);
-    Route::apiResource('tasks', TaskController::class)->only(['index', 'show']);
 });
 
 

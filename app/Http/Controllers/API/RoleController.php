@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class RoleController extends Controller
 {
@@ -21,12 +22,12 @@ class RoleController extends Controller
      */
     public function index()
     {
-        $role = Role::where('user_id', Auth::id())->first();
-        if ($role &&$role->name !== 'admin') {
-            return $this->getResponse('error', "Can't access to this permission", 400);
+        $checkAuth = Role::where('user_id', Auth::id())->first();
+        if ($checkAuth && $checkAuth->name !== 'admin') {
+            return $this->getResponse('error', "Can't access to this permission", 422);
         }
         $roles = Cache::remember('roles', 3600, function () {
-            return Role::with('users')->get();
+            return Role::all();
         });
 
         return $this->getResponse('roles', RoleResource::collection($roles), 200);
@@ -39,9 +40,9 @@ class RoleController extends Controller
      */
     public function show(Role $role)
     {
-        $role = Role::where('user_id', Auth::id())->first();
-        if ($role && $role->name !== 'admin') {
-            return $this->getResponse('error', "Can't access to this permission", 400);
+        $checkAuth = Role::where('user_id', Auth::id())->first();
+        if ($checkAuth && $checkAuth->name !== 'admin') {
+            return $this->getResponse('error', "Can't access to this permission", 422);
         }
         try {
             return $this->getResponse('role', new RoleResource($role), 200);
@@ -57,9 +58,9 @@ class RoleController extends Controller
      */
     public function destroy(Role $role)
     {
-        $role = Role::where('user_id', Auth::id())->first();
-        if ($role  && $role->name !== 'admin') {
-            return $this->getResponse('error', "Can't access to this permission", 400);
+        $checkAuth = Role::where('user_id', Auth::id())->first();
+        if ($checkAuth && $checkAuth->name !== 'admin') {
+            return $this->getResponse('error', "Can't access to this permission", 422);
         }
         $role->delete();
         return $this->getResponse('msg', "Deleted Role Successfully", 200);

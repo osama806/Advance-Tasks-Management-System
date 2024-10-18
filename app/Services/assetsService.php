@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Services;
+namespace App\Services;
 
 use Exception;
 use Illuminate\Support\Facades\Storage;
@@ -9,9 +9,8 @@ use Symfony\Component\HttpFoundation\File\Exception\FileException;
 
 class assetsService {
 
-    public function storeImage($image)
+    public function storeImage($file)
     {
-        $file = $image->file;
         $originalName = $file->getClientOriginalName();
 
         // Ensure the file extension is valid and there is no path traversal in the file name
@@ -25,7 +24,7 @@ class assetsService {
         }
 
         // Validate the MIME type to ensure it's an image
-        $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
         $mime_type = $file->getClientMimeType();
 
         if (!in_array($mime_type, $allowedMimeTypes)) {

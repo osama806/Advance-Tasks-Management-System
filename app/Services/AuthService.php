@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Http\Resources\UserResource;
-use App\Http\Services\assetsService;
+use App\Services\assetsService;
 use App\Models\Role;
 use App\Models\User;
 use App\Traits\ResponseTrait;
@@ -193,11 +193,11 @@ class AuthService
     {
         // Store the file using the assets service
         $assetsService = new AssetsService();
-        $fileURL = $assetsService->storeImage($data['file_path']);
+        $fileURL = $assetsService->storeImage($data['file']);
 
         try {
             $user->attachments()->create([
-                'file_path'       =>        $fileURL
+                'file_path'       =>        $fileURL,
             ]);
 
             return [

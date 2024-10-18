@@ -5,8 +5,10 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AttachmentResource;
 use App\Models\Attachment;
+use App\Models\Role;
 use App\Traits\ResponseTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class AttachmentController extends Controller
@@ -18,6 +20,10 @@ class AttachmentController extends Controller
      */
     public function index()
     {
+        $role = Role::where('user_id', Auth::id())->first();
+        if ($role && $role->name !== 'admin') {
+            return $this->getResponse('error', "Can't access to this permission", 422);
+        }
         $attachments = Cache::remember('attachments', 3600, function () {
             return Attachment::all();
         });
@@ -32,6 +38,10 @@ class AttachmentController extends Controller
      */
     public function show(Attachment $attachment)
     {
+        $role = Role::where('user_id', Auth::id())->first();
+        if ($role && $role->name !== 'admin') {
+            return $this->getResponse('error', "Can't access to this permission", 422);
+        }
         return $this->getResponse('attachment', new AttachmentResource($attachment), 200);
     }
 
@@ -42,6 +52,10 @@ class AttachmentController extends Controller
      */
     public function destroy($id)
     {
+        $role = Role::where('user_id', Auth::id())->first();
+        if ($role && $role->name !== 'admin') {
+            return $this->getResponse('error', "Can't access to this permission", 422);
+        }
         $attachment = Attachment::findOrFail($id);
         if (!$attachment) {
             return $this->getResponse('error', 'Attachment Not Found', 404);

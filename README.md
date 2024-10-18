@@ -1,10 +1,11 @@
-# Task Management API
+# Advance Tasks Management System
 
-The **Task Management API** is a RESTful web service built with PHP and MySQL that allows to admins and managers to assign tasks to users and user can be delivery task when finish it. As well as filtering tasks by priority and task status.
+The **Advance Tasks Management System** is a RESTful web service built with PHP and MySQL that allows to admins and managers to assign tasks to users and user can be change status tasks. As well as filtering tasks by priority and task status.
+Add comments and attachment files to users and tasks. 
 
 ## Table of Contents
 
--   [Task Management API](#task-management-api)
+-   [Advance Tasks Management System](#advance-tasks-management-system)
     -   [Table of Contents](#table-of-contents)
     -   [Features](#features)
     -   [Getting Started](#getting-started)
@@ -23,23 +24,44 @@ The **Task Management API** is a RESTful web service built with PHP and MySQL th
 -   Assignee task to users with limited time
 -   Delete tasks from the system by admin
 -   Retrive tasks after deleted it from system (Soft-Delete)
+-   Add comment to task
+-   Add attachment file to task
 
-4. Users
+2. Users
 
 -   Create new user, admin and manager
 -   Retrieve details of all users by just admin
 -   Retrieve details of a specific user by owned account
 -   Login for user, admin and manager
--   Refresh token 
+-   Refresh token
 -   Logout for user, admin and manager
 -   Update user profile by just admin
 -   Delete user account by owned account
 -   Retrive users after deleted it from system by just admin (Soft-Delete)
--   Delivery task to manager in limited time
+-   Change status task
+-   Add comment to user
+-   Add attachment file to user
+
+3. Comments
+-   Create new comments and assigned them to users and tasks
+-   Display specified comment by admin
+-   Display all comments by admin
+-   Delete specified comment by admin
+
+4. Attachments
+-   Create new attachments and assigned them to users and tasks
+-   Display specified attachment by admin
+-   Display all attachments by admin
+-   Delete specified attachment by admin
+
+5. Roles
+-   Create new role and assigned it to user
+-   Display roles by admin
+-   Display specified role by admin 
 
 ## Getting Started
 
-These instructions will help you set up and run the Task Management System on your local machine for development and testing purposes.
+These instructions will help you set up and run the Advance Tasks Management System on your local machine for development and testing purposes.
 
 ### Prerequisites
 
@@ -53,8 +75,8 @@ These instructions will help you set up and run the Task Management System on yo
 1. **Clone the repository**:
 
     ```
-    git clone https://github.com/osama806/Task-Management-System.git
-    cd Task-Management-System
+    git clone https://github.com/osama806/Advance-Tasks-Management-System.git
+    cd Advance-Tasks-Management-System
     ```
 
 2. **Set up the environment variables:**:
@@ -64,7 +86,7 @@ Create a .env file in the root directory and add your database configuration:
 ```
 DB_HOST=localhost
 DB_PORT=3306
-DB_DATABASE=task-management-api
+DB_DATABASE=advance-tasks-management-system
 DB_USERNAME=root
 DB_PASSWORD=password
 ```
@@ -73,11 +95,11 @@ DB_PASSWORD=password
 
 -   Create a new database in MySQL:
     ```
-    CREATE DATABASE task-management-api;
+    CREATE DATABASE advance-tasks-management-system;
     ```
 -   Run the provided SQL script to create the necessary tables:
     ```
-    mysql -u root -p task-management-api < database/schema.sql
+    mysql -u root -p advance-tasks-management-system < database/schema.sql
     ```
 
 4. **Configure the server**:
@@ -94,7 +116,7 @@ composer install
 6. **Start the server:**:
 
 -   For Apache or Nginx, ensure the server is running.
--   The API will be accessible at http://localhost/task-management-api.
+-   The API will be accessible at http://localhost/advance-tasks-management-system.
 
 ### Postman Collection
 

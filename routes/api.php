@@ -28,7 +28,7 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware(['auth:api', 'refresh.token', 'security'])->group(function () {
         Route::get('users', [AuthController::class, 'index']);
-        Route::apiResource('tasks', TaskController::class)->except(['index', 'show']);
+        Route::apiResource('tasks', TaskController::class);
         Route::controller(TaskController::class)->group(function () {
             Route::post('tasks/{id}/assign', 'assign');
             Route::post('task/{id}/restore', 'restore');
